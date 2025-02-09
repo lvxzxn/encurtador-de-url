@@ -20,3 +20,9 @@ model ShortLink {
   addr      String
   createdAt DateTime @default(now())
 }
+
+model ShortHits {
+  id       String @id @default(uuid())
+  short_id String
+  addr     String @unique
+}

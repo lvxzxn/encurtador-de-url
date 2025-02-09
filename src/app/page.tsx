@@ -4,16 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { useForm } from "react-hook-form";
-import { MoveRight, Scissors } from "lucide-react";
+
+import { Scissors, Clipboard } from "lucide-react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 import * as z from "zod";
-
-import { useRef, useState } from "react";
-import type { ResponseShortenedLink } from "@/types/shortened.response";
-
-import { toast } from "sonner";
 
 const schema = z.object({
 	url: z
@@ -37,11 +34,11 @@ const App = () => {
 	const toastId = useRef<string | null>(null);
 
 	const successMessage = (message: string, link: string) => {
-		toast.success("URL encurtada com sucesso!", {
-			description: "Clique para acessar o link",
+		toast.success(message, {
+			description: `O link encurtado é: ${link}`,
 			action: {
 				label: "Acessar",
-				onClick: () => window.open(`${link}`, "_blank"),
+				onClick: () => window.open(link, "_blank"),
 			},
 			duration: 5000,
 			style: {
@@ -54,17 +51,39 @@ const App = () => {
 	};
 
 	const onSubmit = async (data: Schema) => {
+		event?.preventDefault();
 		const request = await fetch("/api/short", {
 			method: "POST",
 			body: JSON.stringify({ original: data.url }),
 			headers: { "Content-Type": "application/json" },
 		});
-		const response: ResponseShortenedLink = await request.json();
+		const response = await request.json();
 		setShortenedUrl(response.shortened);
 
 		if (toastId.current) {
 			toast.dismiss(toastId.current);
-			successMessage("URL encurtada com sucesso!", `/shortened/${shortenedUrl}`);
+		}
+
+		successMessage(
+			"URL encurtada com sucesso!",
+			`/shortened/${response.shortened}`,
+		);
+	};
+
+	const copyToClipboard = async () => {
+		if (shortenedUrl) {
+			await navigator.clipboard.writeText(
+				`http://localhost:3000/shortened/${shortenedUrl}`,
+			);
+			toast.success("Link copiado para a área de transferência!", {
+				duration: 3000,
+				style: {
+					background: "#28A745",
+					color: "#F8FAFC",
+					border: "none",
+					padding: "12px",
+				},
+			});
 		}
 	};
 
@@ -87,12 +106,6 @@ const App = () => {
 						type="submit"
 						disabled={isSubmitting}
 						className="w-full font-bold"
-						onClick={() =>
-							successMessage(
-								"URL encurtada com sucesso!",
-								`/shortened/${shortenedUrl}`,
-							)
-						}
 					>
 						<span>
 							<Scissors />
@@ -100,6 +113,28 @@ const App = () => {
 						Encurtar Link
 					</Button>
 				</form>
+
+				{shortenedUrl && (
+					<div className="flex flex-col items-center mt-4">
+						<div className="flex items-center space-x-2">
+							<p className="text-white font-semibold">
+								<a
+									href={`/shortened/${shortenedUrl}`}
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									{`${window.location.origin}/shortened/${shortenedUrl}`}
+								</a>
+							</p>
+							<Button
+								onClick={copyToClipboard}
+								className="p-2 bg-gray-700 text-white rounded"
+							>
+								<Clipboard size={20} />
+							</Button>
+						</div>
+					</div>
+				)}
 			</section>
 		</div>
 	);
