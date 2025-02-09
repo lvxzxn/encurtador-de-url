@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  console.log(url);
   const shortId = url.searchParams.get("id");
 
   if (!shortId) {
