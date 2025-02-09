@@ -6,6 +6,7 @@ export default async function ShortenedInfoServer({ link_id }: { link_id: string
   const link = await prisma.shortLink.findUnique({
     where: { "shortened": link_id },
   });
+  console.log(link);
   return (
     <div className="flex h-screen items-center justify-center flex-col">
       <h1 className="text-2xl font-bold text-red-500">Link não encontrado!</h1>
