@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
+import "../../globals.css";
 
 export const metadata: Metadata = {
   title: "Encurtador de URL",

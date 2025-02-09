@@ -1,101 +1,93 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
-}
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import { useForm } from "react-hook-form";
+import { MoveRight, Scissors } from "lucide-react";
+
+import * as z from "zod";
+
+import { useState } from "react";
+import type { ResponseShortenedLink } from "@/types/shortened.response";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+
+const schema = z.object({
+	url: z
+		.string()
+		.url({ message: "Digite uma url válida." })
+		.nonempty()
+		.toLowerCase(),
+});
+
+type Schema = z.infer<typeof schema>;
+
+const App = () => {
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+	} = useForm<Schema>({
+		resolver: zodResolver(schema),
+	});
+	const [shortenedUrl, setShortenedUrl] = useState("");
+	const onSubmit = async (data: Schema) => {
+		const request = await fetch("/api/short", {
+			method: "POST",
+			body: JSON.stringify({ original: data.url }),
+			headers: { "Content-Type": "application/json" },
+		});
+		const response: ResponseShortenedLink = await request.json();
+		console.log(response);
+		setShortenedUrl(response.shortened);
+	};
+	return (
+		<div className="grid min-h-screen justify-center place-items-center">
+			<section className="form">
+				<h1 className="text-white text-3xl font-bold mb-2">
+					Encurtador de URL
+				</h1>
+				{shortenedUrl && (
+					<div className="flex justify-center">
+						<Badge variant={"default"} className="bg-green-500 w-full text-sm p-2">
+							URL encurtada com sucesso!{" "}
+							<Link
+								href={`${window.location.origin}/shortened/${shortenedUrl}`}
+								target="_blank"
+							>
+								<span className="flex text-white underline mx-2">
+									Acessar <MoveRight className="text-blue-500" />
+								</span>
+							</Link>
+						</Badge>
+					</div>
+				)}
+				<form className="mt-2 mb-2" onSubmit={handleSubmit(onSubmit)}>
+					{errors.url && (
+						<p className="text-red-500 mb-2">{errors.url.message}</p>
+					)}
+					<Input
+						{...register("url")}
+						className="bg-[#181818] border-none mb-4 text-white font-bold"
+						placeholder="https://google.com/xxx..."
+					/>
+					<Button
+						type="submit"
+						disabled={isSubmitting}
+						className="w-full font-bold"
+					>
+						<span>
+							<Scissors />
+						</span>
+						Encurtar Link
+					</Button>
+				</form>
+			</section>
+		</div>
+	);
+};
+
+export default App;
