@@ -6,27 +6,30 @@ if (!process.env.MONGODB_URI) {
 
 const MONGODB_URI: string = process.env.MONGODB_URI;
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-let cached = (global as any).mongoose;
-
-if (!cached) {
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  cached = (global as any).mongoose = { conn: null, promise: null };
+interface MongooseCache {
+  conn: mongoose.Connection | null;
+  promise: Promise<mongoose.Connection> | null;
 }
 
-async function connectToDatabase() {
+declare global {
+  var mongooseCache: MongooseCache | undefined;
+}
+
+const cached: MongooseCache = globalThis.mongooseCache || { conn: null, promise: null };
+
+async function connectToDatabase(): Promise<mongoose.Connection> {
   if (cached.conn) {
     return cached.conn;
   }
+
   if (!cached.promise) {
-    const opts = {
-      bufferCommands: false, 
-    };
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
-    });
+    const opts = { bufferCommands: false };
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => mongoose.connection);
   }
+
   cached.conn = await cached.promise;
+  globalThis.mongooseCache = cached;
+
   return cached.conn;
 }
 
