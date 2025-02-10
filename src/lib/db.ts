@@ -6,7 +6,7 @@ if (!MONGODB_URI) {
   throw new Error("Defina a variável de ambiente MONGODB_URI no .env");
 }
 
-export async function connectToDatabase() {
+export default async function connectToDatabase() {
   if (mongoose.connection.readyState >= 1) {
     return mongoose.connection;
   }
