@@ -7,30 +7,35 @@ if (!process.env.MONGODB_URI) {
 const MONGODB_URI: string = process.env.MONGODB_URI;
 
 interface MongooseCache {
-  conn: mongoose.Connection | null;
-  promise: Promise<mongoose.Connection> | null;
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
 }
 
+// Declaração global correta para evitar erro de propriedade inexistente
 declare global {
+  // biome-ignore lint/suspicious/noExplicitAny: Cache do Mongoose pode ser qualquer valor inicialmente
   var mongooseCache: MongooseCache | undefined;
 }
 
-const cached: MongooseCache = globalThis.mongooseCache || { conn: null, promise: null };
+// Garante que `mongooseCache` exista globalmente
+globalThis.mongooseCache = globalThis.mongooseCache ?? { conn: null, promise: null };
 
-async function connectToDatabase(): Promise<mongoose.Connection> {
-  if (cached.conn) {
-    return cached.conn;
+async function connectToDatabase() {
+  if (!globalThis.mongooseCache){
+    return;
   }
 
-  if (!cached.promise) {
+  if (globalThis.mongooseCache.conn) {
+    return globalThis.mongooseCache.conn;
+  }
+
+  if (!globalThis.mongooseCache.promise) {
     const opts = { bufferCommands: false };
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => mongoose.connection);
+    globalThis.mongooseCache.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => mongoose);
   }
 
-  cached.conn = await cached.promise;
-  globalThis.mongooseCache = cached;
-
-  return cached.conn;
+  globalThis.mongooseCache.conn = await globalThis.mongooseCache.promise;
+  return globalThis.mongooseCache.conn;
 }
 
 export default connectToDatabase;
