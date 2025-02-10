@@ -115,7 +115,7 @@ const App = () => {
 				</form>
 
 				{shortenedUrl && (
-					<div className="flex flex-col items-center mt-4">
+					<div className="mt-4">
 						<div className="flex items-center space-x-2">
 							<p className="text-white font-semibold">
 								<a
