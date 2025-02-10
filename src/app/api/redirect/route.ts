@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { ShortLink } from "@/models/short-link"; // Certifique-se de que o caminho do modelo está correto
-import connectToDatabase from "@/lib/db"; // Função para conectar ao MongoDB
+import { ShortLink } from "@/models/short-link"; 
+import connectToDatabase from "@/lib/db"; 
 
 export async function GET(req: NextRequest) {
   try {
-    await connectToDatabase(); // Garante que a conexão com o banco está ativa
+    await connectToDatabase(); 
 
     const url = new URL(req.url);
     const shortId = url.searchParams.get("id");

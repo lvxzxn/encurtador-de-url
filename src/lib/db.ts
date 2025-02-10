@@ -1,4 +1,7 @@
+"use server";
+
 import mongoose from "mongoose";
+import { env } from "node:process";
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
