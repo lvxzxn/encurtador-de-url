@@ -73,7 +73,7 @@ const App = () => {
 	const copyToClipboard = async () => {
 		if (shortenedUrl) {
 			await navigator.clipboard.writeText(
-				`http://localhost:3000/shortened/${shortenedUrl}`,
+				`${window.location.origin}/shortened/${shortenedUrl}`,
 			);
 			toast.success("Link copiado para a área de transferência!", {
 				duration: 3000,
